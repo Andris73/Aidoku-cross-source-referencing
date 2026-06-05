@@ -1,4 +1,4 @@
-name: Build and upload nightly ipa
+name: Build and publish nightly ipa
 
 on: [push, workflow_dispatch]
 
@@ -22,6 +22,8 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
@@ -35,42 +37,58 @@ jobs:
         run: |
           echo "sha_short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
           echo "date=$(date +'%Y-%m-%d')" >> "$GITHUB_OUTPUT"
-          echo "build_number=$(date +'%Y%m%d%H%M')" >> "$GITHUB_OUTPUT"
-      - name: Bump version
+          echo "build=$(git rev-list --count HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Set build number
         run: |
-          # Set build number to date-based value (YYYYMMDDHHmm) so every build is unique
-          agvtool new-version -all ${{ steps.commitinfo.outputs.build_number }}
+          # Build number = git commit count (unique per commit); the combined
+          # AltStore source dedupes on it. MARKETING_VERSION stays the project's.
+          agvtool new-version -all ${{ steps.commitinfo.outputs.build }}
       - name: Build
         run: xcodebuild -scheme "Aidoku (iOS)" -configuration Release archive -archivePath build/Aidoku.xcarchive -skipPackagePluginValidation CODE_SIGN_IDENTITY= CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
       - name: Package ipa
+        id: package
         run: |
-          mkdir Payload
-          cp -r build/Aidoku.xcarchive/Products/Applications/Aidoku.app Payload
-          zip -r Aidoku-iOS_nightly-${{ steps.commitinfo.outputs.sha_short }}.ipa Payload
+          mkdir -p Payload
+          cp -r build/Aidoku.xcarchive/Products/Applications/Aidoku.app Payload/
+          zip -r Aidoku.ipa Payload
+          cp Aidoku.ipa /tmp/Aidoku.ipa
+          APP="build/Aidoku.xcarchive/Products/Applications/Aidoku.app/Info.plist"
+          echo "version=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP")" >> "$GITHUB_OUTPUT"
+          echo "build=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$APP")" >> "$GITHUB_OUTPUT"
+          echo "size=$(stat -f%z Aidoku.ipa)" >> "$GITHUB_OUTPUT"
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: Aidoku-iOS_nightly-${{ steps.commitinfo.outputs.sha_short }}.ipa
-          path: Aidoku-iOS_nightly-${{ steps.commitinfo.outputs.sha_short }}.ipa
+          path: /tmp/Aidoku.ipa
           if-no-files-found: error
-      - name: Create or update nightly release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: nightly
-          name: Nightly Build (${{ steps.commitinfo.outputs.date }})
-          body: |
-            Automated nightly build from commit ${{ steps.commitinfo.outputs.sha_short }} on ${{ steps.commitinfo.outputs.date }}.
-
-            **Commit:** [`${{ steps.commitinfo.outputs.sha_short }}`](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
-            **Branch:** `${{ github.ref_name }}`
-          prerelease: true
-          files: Aidoku-iOS_nightly-${{ steps.commitinfo.outputs.sha_short }}.ipa
-          make_latest: false
-
-  update-source:
-    needs: build
-    uses: ./.github/workflows/update_livecontainer_source.yml
-    permissions:
-      contents: write
-    with:
-      release_tag: nightly
+      - name: Publish to combined AltStore source
+        if: github.ref_name == 'andris-cross-source'
+        env:
+          APP_ID: aidoku
+          VERSION: "${{ steps.package.outputs.version }}"
+          BUILD: "${{ steps.package.outputs.build }}"
+          SIZE: "${{ steps.package.outputs.size }}"
+          SHA_SHORT: "${{ steps.commitinfo.outputs.sha_short }}"
+          DATE: "${{ steps.commitinfo.outputs.date }}"
+          ALTSTORE_TOKEN: "${{ secrets.ALTSTORE_TOKEN }}"
+        run: |
+          for attempt in 1 2 3; do
+            rm -rf /tmp/altstore
+            git clone --depth 1 "https://x-access-token:${ALTSTORE_TOKEN}@github.com/Andris73/altstore.git" /tmp/altstore
+            mkdir -p /tmp/altstore/ipas /tmp/altstore/icons
+            cp /tmp/Aidoku.ipa /tmp/altstore/ipas/aidoku.ipa
+            cp Shared/Assets.xcassets/AppIcon.appiconset/Icon.png /tmp/altstore/icons/aidoku.png
+            if ( cd /tmp/altstore \
+                 && python3 tools/update_app.py \
+                 && git config user.name "github-actions" \
+                 && git config user.email "github-actions@github.com" \
+                 && git add apps.json ipas/aidoku.ipa icons/aidoku.png \
+                 && { git commit -m "Aidoku ${VERSION} (build ${BUILD})" || exit 0; } \
+                 && git push ); then
+              echo "Published Aidoku ${VERSION} (build ${BUILD})"
+              break
+            fi
+            echo "Publish attempt ${attempt} failed (possible push race); retrying…"
+            sleep $((RANDOM % 5 + 3))
+          done
