@@ -8,6 +8,12 @@
 
 // General
 "CONTINUE" = "Continue";
+"SWITCH" = "Switch";
+
+// Cross-source
+"NEWER_SOURCE_AVAILABLE" = "Newer chapters available";
+"NEWER_SOURCE_ON_%@" = "%@ has a newer chapter";
+"CHECK_OTHER_SOURCES" = "Check Other Sources";
 "CANCEL" = "Cancel";
 "OK" = "OK";
 "DONE" = "Done";

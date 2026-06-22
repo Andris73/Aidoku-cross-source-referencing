@@ -51,6 +51,8 @@ extension MangaView {
 
         @Published var error: Error?
 
+        @Published var crossSourceResult: CrossSourceResult?
+
         private var fetchedDetails = false
         private var markedOpened = false
         private var cancellables = Set<AnyCancellable>()
@@ -318,6 +320,20 @@ extension MangaView.ViewModel {
         await loadBookmarked()
         await loadHistory()
         await fetchData()
+    }
+
+    // checks other installed sources for a newer chapter (library manga only)
+    func checkForNewerSource(force: Bool = false) async {
+        guard bookmarked else { return }
+        let result = await CrossSourceChecker.shared.check(
+            sourceKey: manga.sourceKey,
+            mangaKey: manga.key,
+            title: manga.title,
+            force: force
+        )
+        withAnimation {
+            self.crossSourceResult = (result?.hasNewerSource ?? false) ? result : nil
+        }
     }
 
     // fetches manga data, from coredata if in library or from source if not

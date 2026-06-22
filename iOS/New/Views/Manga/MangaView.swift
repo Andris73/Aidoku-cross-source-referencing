@@ -61,6 +61,10 @@ struct MangaView: View {
             List(selection: $selectedChapters) {
                 headerView
 
+                if let result = viewModel.crossSourceResult, result.hasNewerSource {
+                    crossSourceBanner(result)
+                }
+
                 if let error = viewModel.error {
                     ErrorView(error: error) {
                         viewModel.error = nil
@@ -201,6 +205,8 @@ struct MangaView: View {
 
                 await viewModel.syncTrackerProgress()
                 detailsLoaded = true
+
+                await viewModel.checkForNewerSource()
             }
             .onAppear {
                 viewModel.refreshReadButtonState()
@@ -563,12 +569,65 @@ extension MangaView {
                 let viewController = SwiftUINavigationViewController(rootView: migrateView)
                 path.present(viewController)
             },
+            checkOtherSources: {
+                Task {
+                    await viewModel.checkForNewerSource(force: true)
+                }
+            },
             showShareSheet: showShareSheet(item:),
             removeDownloads: {
                 showRemoveAllConfirm = true
             },
             editMode: $editMode
         ).equatable()
+    }
+
+    @ViewBuilder
+    func crossSourceBanner(_ result: CrossSourceResult) -> some View {
+        Button {
+            presentNewerSourceMigration(result)
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "arrow.up.circle.fill")
+                    .font(.title2)
+                    .foregroundStyle(.white, .green)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(NSLocalizedString("NEWER_SOURCE_AVAILABLE"))
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                    Text(String(
+                        format: NSLocalizedString("NEWER_SOURCE_ON_%@"),
+                        result.matchedSourceName ?? NSLocalizedString("UNKNOWN")
+                    ))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                }
+                Spacer(minLength: 0)
+                Text(NSLocalizedString("SWITCH"))
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.tint)
+            }
+            .padding(12)
+            .background(Color.green.opacity(0.12))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+        }
+        .buttonStyle(.plain)
+        .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+    }
+
+    func presentNewerSourceMigration(_ result: CrossSourceResult) {
+        guard
+            let matchedKey = result.matchedSourceKey,
+            let source = SourceManager.shared.source(for: matchedKey)
+        else { return }
+        let migrateView = MigrateSelectDestinationView(
+            selectedSeries: [viewModel.manga],
+            selectedSources: [source.toInfo()]
+        )
+        let viewController = SwiftUINavigationViewController(rootView: migrateView)
+        path.present(viewController)
     }
 }
 
@@ -850,6 +909,7 @@ private struct RightNavbarButton: View, Equatable {
     let markAllUnread: () -> Void
     let editCategories: () -> Void
     let migrate: () -> Void
+    let checkOtherSources: () -> Void
     let showShareSheet: (URL) -> Void
     let removeDownloads: () -> Void
 
@@ -862,6 +922,7 @@ private struct RightNavbarButton: View, Equatable {
         markAllUnread: @escaping () -> Void,
         editCategories: @escaping () -> Void,
         migrate: @escaping () -> Void,
+        checkOtherSources: @escaping () -> Void,
         showShareSheet: @escaping (URL) -> Void,
         removeDownloads: @escaping () -> Void,
         editMode: Binding<EditMode>
@@ -876,6 +937,7 @@ private struct RightNavbarButton: View, Equatable {
         self.markAllUnread = markAllUnread
         self.editCategories = editCategories
         self.migrate = migrate
+        self.checkOtherSources = checkOtherSources
         self.showShareSheet = showShareSheet
         self.removeDownloads = removeDownloads
 
@@ -928,6 +990,11 @@ private struct RightNavbarButton: View, Equatable {
                             migrate()
                         } label: {
                             Label(NSLocalizedString("MIGRATE"), systemImage: "arrow.left.arrow.right")
+                        }
+                        Button {
+                            checkOtherSources()
+                        } label: {
+                            Label(NSLocalizedString("CHECK_OTHER_SOURCES"), systemImage: "arrow.up.arrow.down.circle")
                         }
                         if #available(iOS 18.0, *) { // only for system versions supporting swipe down to dismiss
                             Button {
