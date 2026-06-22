@@ -151,6 +151,17 @@ actor CrossSourceChecker {
         persist()
     }
 
+    /// Load the whole library from CoreData and check it (used by the manual "Check Now" button).
+    func checkEntireLibrary(force: Bool) async {
+        let library: [MangaInfo] = await CoreDataManager.shared.container.performBackgroundTask { context in
+            CoreDataManager.shared.getLibraryManga(context: context).compactMap { object in
+                guard let manga = object.manga else { return nil }
+                return MangaInfo(mangaId: manga.id, sourceId: manga.sourceId, title: manga.title)
+            }
+        }
+        await checkLibrary(library, force: force)
+    }
+
     // MARK: - Library sweep
 
     private func runLibraryCheck(_ manga: [MangaInfo], force: Bool) async {

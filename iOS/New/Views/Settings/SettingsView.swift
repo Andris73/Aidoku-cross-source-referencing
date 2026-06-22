@@ -303,6 +303,8 @@ extension SettingsView {
             BackupsView().environmentObject(path)
         } else if key == "Downloads" {
             DownloadsView().environmentObject(path)
+        } else if key == "CrossSource" {
+            CrossSourceSettingsView()
         }
     }
 

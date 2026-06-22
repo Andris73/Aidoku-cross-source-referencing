@@ -134,6 +134,7 @@
 		FB1A4E672E79B1A6006F4BA8 /* KomgaApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB1A4E662E79B1A4006F4BA8 /* KomgaApi.swift */; };
 		FB1A4E682E79B1A6006F4BA8 /* KomgaApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB1A4E662E79B1A4006F4BA8 /* KomgaApi.swift */; };
 		FB1A4E6A2E7AFEC2006F4BA8 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB1A4E692E7AFEC0006F4BA8 /* SettingsView.swift */; };
+		FBC5052B2E00AA0300000002 /* CrossSourceSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC5052A2E00AA0300000001 /* CrossSourceSettingsView.swift */; };
 		FB1B483E277CE1920056D02C /* Aidoku.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = FB1B482B277CE18D0056D02C /* Aidoku.xcdatamodeld */; };
 		FB1B483F277CE1920056D02C /* Aidoku.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = FB1B482B277CE18D0056D02C /* Aidoku.xcdatamodeld */; };
 		FB1B4841277CE1920056D02C /* AidokuApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB1B482D277CE18D0056D02C /* AidokuApp.swift */; };
@@ -695,6 +696,7 @@
 		FB1A4E632E78A82D006F4BA8 /* EnhancedTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnhancedTracker.swift; sourceTree = "<group>"; };
 		FB1A4E662E79B1A4006F4BA8 /* KomgaApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KomgaApi.swift; sourceTree = "<group>"; };
 		FB1A4E692E7AFEC0006F4BA8 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		FBC5052A2E00AA0300000001 /* CrossSourceSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrossSourceSettingsView.swift; sourceTree = "<group>"; };
 		FB1B482C277CE18D0056D02C /* Shared.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Shared.xcdatamodel; sourceTree = "<group>"; };
 		FB1B482D277CE18D0056D02C /* AidokuApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AidokuApp.swift; sourceTree = "<group>"; };
 		FB1B4830277CE1920056D02C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -1987,6 +1989,7 @@
 				FBB516482E2F057200749F4E /* Downloads */,
 				FBFF58902E7F2641009367B7 /* Settings.swift */,
 				FB1A4E692E7AFEC0006F4BA8 /* SettingsView.swift */,
+				FBC5052A2E00AA0300000001 /* CrossSourceSettingsView.swift */,
 				FB077DA52E7DC5C300C9C214 /* SettingSearchResult.swift */,
 				FB077DA92E7DC76F00C9C214 /* SettingsAboutView.swift */,
 				FB077DAB2E7DC82E00C9C214 /* SettingsTrackingView.swift */,
@@ -2686,6 +2689,7 @@
 				FBA748A72E81C12400D9BE86 /* BangumiModels.swift in Sources */,
 				FB6340BB2792202B0072A2A2 /* Listing.swift in Sources */,
 				FB1A4E6A2E7AFEC2006F4BA8 /* SettingsView.swift in Sources */,
+				FBC5052B2E00AA0300000002 /* CrossSourceSettingsView.swift in Sources */,
 				FB55C0AF2DF1E26A0019A551 /* SourceListsView.swift in Sources */,
 				FB55C0B62DF2479C0019A551 /* LocalSetupView.swift in Sources */,
 				FB05F8672964917A00D1EA2D /* SourceViewController.swift in Sources */,

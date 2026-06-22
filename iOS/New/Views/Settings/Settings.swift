@@ -245,7 +245,14 @@ extension Settings {
                     value: .toggle(.init())
                 )
             ]))
-        )
+        ),
+        .init(value: .group(.init(items: [
+            .init(
+                key: "CrossSource",
+                title: NSLocalizedString("CROSS_SOURCE_CHECK"),
+                value: .page(.init(items: []))
+            )
+        ])))
     ] + libraryUpdateGroups
 
     private static let libraryUpdateGroups: [Setting] = {

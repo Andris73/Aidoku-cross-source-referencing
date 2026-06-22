@@ -14,6 +14,11 @@
 "NEWER_SOURCE_AVAILABLE" = "Newer chapters available";
 "NEWER_SOURCE_ON_%@" = "%@ has a newer chapter";
 "CHECK_OTHER_SOURCES" = "Check Other Sources";
+"CROSS_SOURCE_CHECK" = "Cross-Source Check";
+"CROSS_SOURCE_ENABLED" = "Check Other Sources";
+"CROSS_SOURCE_ENABLED_TEXT" = "Automatically check your other installed sources for newer chapters when the library refreshes.";
+"CHECK_NOW" = "Check Now";
+"EXCLUDED_SOURCES" = "Excluded Sources";
 "CANCEL" = "Cancel";
 "OK" = "OK";
 "DONE" = "Done";
