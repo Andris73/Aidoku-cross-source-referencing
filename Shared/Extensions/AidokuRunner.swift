@@ -8,6 +8,18 @@
 import AidokuRunner
 import Foundation
 
+/// Carries per-request behaviour down the async call tree for source network requests.
+enum SourceRequestContext {
+    /// When set, a request that hits a Cloudflare challenge fails fast (throws
+    /// `CloudflareChallengeError`) instead of presenting the interactive
+    /// verification popup. Used by background cross-source checks so they can
+    /// never interrupt the user.
+    @TaskLocal static var nonInteractive = false
+}
+
+/// Thrown when a request hits a Cloudflare challenge while running non-interactively.
+struct CloudflareChallengeError: Error {}
+
 extension InterpreterConfiguration {
     static func defaultConfig(for sourceId: String) -> Self {
         .init(
@@ -28,6 +40,10 @@ extension InterpreterConfiguration {
                     if let httpResponse {
                         // check if cloudflare blocked the request
                         if CloudflareHandler.shared.shouldHandle(response: httpResponse, data: data) {
+                            // background checks must never show the verification popup
+                            if SourceRequestContext.nonInteractive {
+                                throw CloudflareChallengeError()
+                            }
                             return try await CloudflareHandler.shared.handle(request: request)
                         }
                     }

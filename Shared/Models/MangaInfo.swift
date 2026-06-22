@@ -22,6 +22,9 @@ struct MangaInfo: Hashable, Sendable {
     var unread: Int = 0
     var downloads: Int = 0
 
+    // set by CrossSourceChecker when another installed source has newer chapters
+    var hasNewerSource: Bool = false
+
     func toManga() -> Manga {
         Manga(
             sourceId: sourceId,

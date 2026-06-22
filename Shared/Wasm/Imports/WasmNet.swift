@@ -159,12 +159,22 @@ extension WasmNet {
 
         guard let request = modifyRequest(urlRequest) else { return nil }
 
+        // capture synchronously while still in the calling task's context, since the
+        // completion handler below runs on a URLSession queue that won't inherit it
+        let nonInteractive = SourceRequestContext.nonInteractive
+
         URLSession.shared.dataTask(with: request) { data, response, error in
             self.incrementRequest()
 
             if let httpResponse = response as? HTTPURLResponse, let data {
                 // check for cloudflare block
                 if CloudflareHandler.shared.shouldHandle(response: httpResponse, data: data) {
+                    // background checks must never show the verification popup
+                    if nonInteractive {
+                        self.storedResponse = .init(error: CloudflareChallengeError())
+                        self.semaphore.signal()
+                        return
+                    }
                     Task {
                         do {
                             let (data, response) = try await CloudflareHandler.shared.handle(request: request)
