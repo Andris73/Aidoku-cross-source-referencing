@@ -15,6 +15,9 @@ class LibraryViewModel {
     var pinnedManga: [MangaInfo] = []
     var sourceKeys: [String] = []
 
+    // unique keys (sourceKey.mangaKey) of manga that have a newer source available
+    var newerSourceKeys: Set<String> = []
+
     // temporary storage when searching
     private var searchQuery: String = ""
     private var storedManga: [MangaInfo]?
@@ -757,6 +760,17 @@ extension LibraryViewModel {
             mangaId: manga.mangaId,
             categories: [currentCategory]
         )
+    }
+
+    func loadCrossSourceCache() async {
+        newerSourceKeys = await CrossSourceChecker.shared.newerSourceKeys()
+    }
+
+    func runCrossSourceCheck(force: Bool = false) {
+        let library = manga + pinnedManga
+        Task {
+            await CrossSourceChecker.shared.checkLibrary(library, force: force)
+        }
     }
 
     func removeFromCurrentCategory(manga: MangaInfo) async {

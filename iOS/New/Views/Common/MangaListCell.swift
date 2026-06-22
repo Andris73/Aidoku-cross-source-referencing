@@ -59,6 +59,13 @@ class MangaListCell: UICollectionViewCell {
         return bookmarkImageView
     }()
 
+    private lazy var newerSourceView = NewerSourceBadgeView()
+
+    var showsNewerSource: Bool {
+        get { !newerSourceView.isHidden }
+        set { newerSourceView.isHidden = !newValue }
+    }
+
     private lazy var titleStackView = {
         let stackView = UIStackView()
         stackView.axis = .vertical
@@ -109,6 +116,9 @@ class MangaListCell: UICollectionViewCell {
 
         coverImageView.addSubview(bookmarkImageView)
 
+        newerSourceView.isHidden = true
+        coverImageView.addSubview(newerSourceView)
+
         titleStackView.addArrangedSubview(titleLabel)
         titleStackView.addArrangedSubview(subtitleLabel)
         titleStackView.addArrangedSubview(tagScrollView)
@@ -122,6 +132,7 @@ class MangaListCell: UICollectionViewCell {
     func constrain() {
         coverImageView.translatesAutoresizingMaskIntoConstraints = false
         bookmarkImageView.translatesAutoresizingMaskIntoConstraints = false
+        newerSourceView.translatesAutoresizingMaskIntoConstraints = false
         titleStackView.translatesAutoresizingMaskIntoConstraints = false
         selectionView.translatesAutoresizingMaskIntoConstraints = false
         badgeView.translatesAutoresizingMaskIntoConstraints = false
@@ -146,6 +157,11 @@ class MangaListCell: UICollectionViewCell {
             bookmarkImageView.widthAnchor.constraint(equalToConstant: 17),
             bookmarkImageView.heightAnchor.constraint(equalToConstant: 27),
 
+            newerSourceView.trailingAnchor.constraint(equalTo: coverImageView.trailingAnchor, constant: -4),
+            newerSourceView.topAnchor.constraint(equalTo: coverImageView.topAnchor, constant: 4),
+            newerSourceView.widthAnchor.constraint(equalToConstant: 18),
+            newerSourceView.heightAnchor.constraint(equalToConstant: 18),
+
             textTrailingConstraint!,
             titleStackView.leadingAnchor.constraint(equalTo: coverImageView.trailingAnchor, constant: 12),
             titleStackView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
@@ -163,6 +179,7 @@ class MangaListCell: UICollectionViewCell {
         imageTask?.cancel()
         imageTask = nil
         setBadgeVisible(false)
+        newerSourceView.isHidden = true
         alpha = 1
     }
 

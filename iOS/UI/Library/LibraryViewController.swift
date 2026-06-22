@@ -238,8 +238,10 @@ class LibraryViewController: OldMangaCollectionViewController {
 
             // load library
             await viewModel.loadLibrary()
+            await viewModel.loadCrossSourceCache()
             updateEmptyStack()
             updateLockState()
+            viewModel.runCrossSourceCheck()
         }
     }
 
@@ -306,8 +308,23 @@ class LibraryViewController: OldMangaCollectionViewController {
             guard let self else { return }
             Task { @MainActor in
                 await self.viewModel.loadLibrary()
+                await self.viewModel.loadCrossSourceCache()
                 self.updateEmptyStack()
                 self.updateDataSource()
+                self.viewModel.runCrossSourceCheck()
+            }
+        }
+
+        addObserver(forName: .crossSourceCheckCompleted) { [weak self] notification in
+            guard let self else { return }
+            Task { @MainActor in
+                guard let result = notification.object as? CrossSourceResult else { return }
+                if result.hasNewerSource {
+                    self.viewModel.newerSourceKeys.insert(result.uniqueKey)
+                } else {
+                    self.viewModel.newerSourceKeys.remove(result.uniqueKey)
+                }
+                self.reconfigureCrossSourceItem(uniqueKey: result.uniqueKey)
             }
         }
         addObserver(forName: .updateLibraryLock) { [weak self] _ in
@@ -474,6 +491,7 @@ class LibraryViewController: OldMangaCollectionViewController {
 
         cell.badgeNumber = viewModel.badgeType.contains(.unread) ? info.unread : 0
         cell.badgeNumber2 = viewModel.badgeType.contains(.downloaded) ? info.downloads : 0
+        cell.showsNewerSource = viewModel.newerSourceKeys.contains("\(info.sourceId).\(info.mangaId)")
 
         cell.setEditing(self.isEditing, animated: false)
     }
@@ -483,6 +501,7 @@ class LibraryViewController: OldMangaCollectionViewController {
 
         cell.badgeNumber = viewModel.badgeType.contains(.unread) ? info.unread : 0
         cell.badgeNumber2 = viewModel.badgeType.contains(.downloaded) ? info.downloads : 0
+        cell.showsNewerSource = viewModel.newerSourceKeys.contains("\(info.sourceId).\(info.mangaId)")
 
         cell.setEditing(isEditing, animated: false)
     }
@@ -772,6 +791,15 @@ extension LibraryViewController {
         var snapshot = dataSource.snapshot()
         snapshot.reconfigureItems(snapshot.itemIdentifiers)
         dataSource.apply(snapshot)
+    }
+
+    func reconfigureCrossSourceItem(uniqueKey: String) {
+        var snapshot = dataSource.snapshot()
+        guard let info = snapshot.itemIdentifiers.first(where: {
+            "\($0.sourceId).\($0.mangaId)" == uniqueKey
+        }) else { return }
+        snapshot.reconfigureItems([info])
+        dataSource.apply(snapshot, animatingDifferences: false)
     }
 }
 

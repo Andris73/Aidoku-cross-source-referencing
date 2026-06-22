@@ -101,6 +101,15 @@ actor CrossSourceChecker {
         return result
     }
 
+    /// Unique keys (`sourceKey.mangaKey`) of cached results that have a newer source.
+    func newerSourceKeys() -> Set<String> {
+        Set(
+            state.results.values
+                .filter { !isExpired($0) && $0.hasNewerSource }
+                .map { $0.uniqueKey }
+        )
+    }
+
     /// Check a single manga, returning the (possibly cached) result.
     @discardableResult
     func check(

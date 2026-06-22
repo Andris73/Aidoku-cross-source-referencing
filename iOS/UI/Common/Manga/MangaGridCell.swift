@@ -31,6 +31,15 @@ class MangaGridCell: UICollectionViewCell {
         }
     }
 
+    var showsNewerSource: Bool {
+        get {
+            !newerSourceView.isHidden
+        }
+        set {
+            newerSourceView.isHidden = !newValue
+        }
+    }
+
     var badgeNumber: Int {
         get { badgeView.badgeNumber }
         set { badgeView.badgeNumber = newValue }
@@ -48,6 +57,7 @@ class MangaGridCell: UICollectionViewCell {
     private lazy var badgeView = DoubleBadgeView()
 
     private let bookmarkView = UIImageView()
+    private lazy var newerSourceView = NewerSourceBadgeView()
     private let highlightView = UIView()
 
     private var url: String?
@@ -113,6 +123,9 @@ class MangaGridCell: UICollectionViewCell {
         bookmarkView.contentMode = .scaleAspectFit
         contentView.addSubview(bookmarkView)
 
+        newerSourceView.isHidden = true
+        contentView.addSubview(newerSourceView)
+
         highlightView.alpha = 0
         highlightView.backgroundColor = UIColor(white: 0, alpha: 0.5)
         highlightView.layer.cornerRadius = layer.cornerRadius
@@ -157,6 +170,11 @@ class MangaGridCell: UICollectionViewCell {
             bookmarkView.widthAnchor.constraint(equalToConstant: 17),
             bookmarkView.heightAnchor.constraint(equalToConstant: 27),
 
+            newerSourceView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -5),
+            newerSourceView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 5),
+            newerSourceView.widthAnchor.constraint(equalToConstant: 20),
+            newerSourceView.heightAnchor.constraint(equalToConstant: 20),
+
             highlightView.topAnchor.constraint(equalTo: contentView.topAnchor),
             highlightView.leftAnchor.constraint(equalTo: contentView.leftAnchor),
             highlightView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
@@ -185,6 +203,7 @@ class MangaGridCell: UICollectionViewCell {
         imageTask?.cancel()
         imageTask = nil
         highlightView.alpha = 0
+        newerSourceView.isHidden = true
     }
 }
 
