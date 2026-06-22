@@ -47,7 +47,7 @@ jobs:
           path: /tmp/Aidoku.ipa
           if-no-files-found: error
       - name: Publish to combined AltStore source
-        if: github.ref_name == 'master' || github.ref_name == 'main'
+        if: github.ref_name == github.event.repository.default_branch
         env:
           APP_ID: aidoku
           VERSION: "${{ steps.package.outputs.version }}"
@@ -61,6 +61,7 @@ jobs:
             echo "ALTSTORE_TOKEN not set — skipping publish. IPA is available as a build artifact."
             exit 0
           fi
+          published=false
           for attempt in 1 2 3; do
             rm -rf /tmp/altstore
             git clone --depth 1 "https://x-access-token:${ALTSTORE_TOKEN}@github.com/Andris73/altstore.git" /tmp/altstore
@@ -75,8 +76,13 @@ jobs:
                  && { git commit -m "Aidoku ${VERSION} (build ${BUILD})" || exit 0; } \
                  && git push ); then
               echo "Published Aidoku ${VERSION} (build ${BUILD})"
+              published=true
               break
             fi
             echo "Publish attempt ${attempt} failed (possible push race); retrying…"
             sleep $((RANDOM % 5 + 3))
           done
+          if [ "$published" != true ]; then
+            echo "Publish failed after 3 attempts"
+            exit 1
+          fi
